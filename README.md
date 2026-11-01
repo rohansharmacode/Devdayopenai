@@ -94,7 +94,7 @@ src/seed.js    fictional café, 6 staff, 2 weeks of shifts generated around toda
 src/rota.js    clock-in, pay, hour warnings, cover candidates (pure functions)
 src/ai.js      OpenAI Responses API ranking with rule fallback
 src/app.js     Express API
-public/        plain HTML/CSS/JS front end with FullCalendar
+public/        plain HTML/CSS/JS front end (FullCalendar, Geist font)
 test/          node:test suites
 ```
 
@@ -110,6 +110,7 @@ test/          node:test suites
 
 - [Express](https://expressjs.com/) (MIT) for the HTTP server.
 - [FullCalendar](https://fullcalendar.io/) 6 (MIT) for the calendar views, served from `node_modules`.
+- [Geist](https://vercel.com/font) and Geist Mono by Vercel (SIL Open Font License) for type. The visual style follows Vercel's Geist design system (neutral greys, black primary buttons), with Apple-style touches: a translucent header, segmented controls, sheets, switches and a progress ring. It was written from scratch in plain CSS; no template code was copied.
 - The OpenAI Responses API powers cover ranking.
 - Built with Claude Code (Anthropic) and OpenAI Codex during the hackathon. No templates or pre-existing project code were used.
 - The idea was inspired by enterprise workforce tools such as Rotageek, simplified for very small teams. RotaBuddy has no affiliation with them and uses none of their code or assets.

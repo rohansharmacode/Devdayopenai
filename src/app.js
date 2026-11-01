@@ -18,6 +18,7 @@ export function createApp({ store, now = () => new Date(), env = process.env, fe
   app.use(express.json({ limit: "50kb" }));
   app.use(express.static(path.join(ROOT, "public")));
   app.use("/vendor/fullcalendar", express.static(path.join(ROOT, "node_modules", "fullcalendar")));
+  app.use("/vendor/geist", express.static(path.join(ROOT, "node_modules", "geist", "dist", "fonts")));
 
   // Demo "login": the client sends who it is acting as. Not real auth (see README).
   app.use("/api", (req, _res, next) => {
@@ -162,7 +163,7 @@ export function createApp({ store, now = () => new Date(), env = process.env, fe
       shift.cover.coveredAt = now().toISOString();
       shift.staffId = me;
       shift.status = "covered";
-      store.log("cover", `${person.name} is covering ${shift.role} on ${new Date(shift.start).toDateString()}.`);
+      store.log("cover", `${person.name} is covering ${shift.role} on ${new Date(shift.start).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}.`);
     } else {
       shift.cover.declined.push(me);
       shift.cover.asked = shift.cover.asked.filter((x) => x !== me);
