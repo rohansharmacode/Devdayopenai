@@ -8,10 +8,12 @@ The app was built in Claude Code. These steps give Codex a real, visible job at 
 
 ```powershell
 cd $HOME\Devdayopenai
+git pull                                               # get the latest version
+npm.cmd install                                        # new font packages
 npm.cmd install -g @openai/codex
 git config --global user.name "rohansharmacode"
 git config --global user.email "74927848+rohansharmacode@users.noreply.github.com"
-npm.cmd test                                           # expect 18 passing
+npm.cmd test                                           # expect 23 passing
 codex.cmd                                              # choose "Sign in with ChatGPT"
 ```
 
@@ -20,7 +22,7 @@ codex.cmd                                              # choose "Sign in with Ch
 ```bash
 curl -fsSL https://chatgpt.com/codex/install.sh | sh   # or: npm install -g @openai/codex
 git clone https://github.com/rohansharmacode/Devdayopenai.git && cd Devdayopenai
-npm install && npm test                                # expect 18 passing
+npm install && npm test                                # expect 23 passing
 codex                                                  # choose "Sign in with ChatGPT"
 ```
 
@@ -30,7 +32,7 @@ Codex reads `AGENTS.md` in the repo root for project rules. When you `git push` 
 
 In the Codex CLI, run `/review`, choose **custom instructions**, and paste:
 
-> Review the whole codebase (src/, public/, test/) as if it were going to a real café tomorrow. Focus on correctness of pay and clock-in maths, timezone/DST bugs, permission checks in src/app.js, XSS in public/app.js, and anything that could let a worker take a shift they shouldn't. Give prioritised findings with file and line.
+> Review the whole codebase (src/, public/, test/) as if it were going to a real café tomorrow. Focus on correctness of pay and clock-in maths, timezone/DST bugs, permission checks in src/app.js, XSS in public/app.js, anything that could let a worker take a shift they shouldn't, and ways to farm XP or abuse the public review and tip endpoint in src/game.js and src/app.js. Give prioritised findings with file and line.
 
 Screenshot the findings, because that screenshot is your evidence.
 
