@@ -1,10 +1,10 @@
-# RotaBuddy
+# Shift+
 
 **Simple rotas, proximity clock-in, live pay and an AI shift-cover finder for small businesses.**
 
 Built in one day at the DevDay Exchange Community Hackathon, London, 1 November 2026.
 
-Small cafés, shops and salons run their rotas on WhatsApp groups and spreadsheets. When someone can't make a shift, the owner spends the morning texting people who are already working, on holiday or about to go over their hours. RotaBuddy keeps the rota, clocks people in when they actually arrive, adds up pay as they go, and when a shift is dropped it works out who can really cover it and asks them.
+Small cafés, shops and salons run their rotas on WhatsApp groups and spreadsheets. When someone can't make a shift, the owner spends the morning texting people who are already working, on holiday or about to go over their hours. Shift+ keeps the rota, clocks people in when they actually arrive, adds up pay as they go, and when a shift is dropped it works out who can really cover it and asks them.
 
 ![Manager view: weekly rota, alerts and live pay](docs/manager.png)
 
@@ -13,7 +13,7 @@ Small cafés, shops and salons run their rotas on WhatsApp groups and spreadshee
 1. **The manager** builds the week on a calendar: drag to add a shift, drag to move it, click to reassign.
 2. **A worker arrives at work.** The phone view sees they're within 100 m of the site and clocks them in automatically. If they're further away, clock-in is refused and the app says how far they are.
 3. **Pay adds up live:** this shift, this week and this month, with what they'll earn if they work their rota.
-4. **The worker taps "Can't make it"** on a future shift. RotaBuddy finds everyone who could cover it: no clashing shift, not on time off, wouldn't break 48 hours. It ranks them with AI on skills, usual availability and hours left, writes a reason for each, and asks the top three.
+4. **The worker taps "Can't make it"** on a future shift. Shift+ finds everyone who could cover it: no clashing shift, not on time off, wouldn't break 48 hours. It ranks them with AI on skills, usual availability and hours left, writes a reason for each, and asks the top three.
 5. **A colleague taps "Yes, I'll cover".** The calendar, both people's rotas and the pay projections update for everyone.
 
 | Worker: proximity clock-in | Worker: cover request | Manager: AI-ranked cover |
@@ -44,6 +44,11 @@ npm start                # http://localhost:3000
 - In Tom's window, tap **Simulate: at home**, then **Simulate: at work**. He clocks in automatically. **Use my GPS** uses your real location; the site is a fixed demo point in Shoreditch.
 - Tap **Can't make it** on Tom's Monday shift, then switch a window to **Leo Martins** and accept.
 - `npm run reset` (or **Reset demo data** in the manager view) re-seeds the data for the current week.
+
+### Test it as a phone app
+
+- **Chrome or Edge DevTools.** Press F12, then Ctrl+Shift+M, and pick an iPhone or Pixel from the device list. To test real proximity, open the ⋮ menu → More tools → Sensors and set Location to latitude `51.5246`, longitude `-0.0786` (on site), or anywhere else (off site). Then tap **My GPS**.
+- **Your own phone on the same Wi-Fi.** Open `http://<your-laptop-IP>:3000/?as=s2` (find the IP with `ipconfig` on Windows). Use **Add to Home Screen** for a full-screen app with the Shift+ icon. Phones only share GPS with HTTPS sites, so use the **At work** and **At home** buttons there.
 
 **No API key?** Everything still works. Cover ranking falls back to transparent rules and the UI says "Ranked by rules". With a key, the badge reads "Ranked by AI".
 
@@ -113,7 +118,7 @@ test/          node:test suites
 - [Geist](https://vercel.com/font) and Geist Mono by Vercel (SIL Open Font License) for type. The visual style follows Vercel's Geist design system (neutral greys, black primary buttons), with Apple-style touches: a translucent header, segmented controls, sheets, switches and a progress ring. It was written from scratch in plain CSS; no template code was copied.
 - The OpenAI Responses API powers cover ranking.
 - Built with Claude Code (Anthropic) and OpenAI Codex during the hackathon. No templates or pre-existing project code were used.
-- The idea was inspired by enterprise workforce tools such as Rotageek, simplified for very small teams. RotaBuddy has no affiliation with them and uses none of their code or assets.
+- The idea was inspired by enterprise workforce tools such as Rotageek, simplified for very small teams. Shift+ has no affiliation with them and uses none of their code or assets.
 
 ## Licence
 

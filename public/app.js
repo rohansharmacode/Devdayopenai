@@ -1,4 +1,4 @@
-// RotaBuddy front end. Plain JS, no build step.
+// Shift+ front end. Plain JS, no build step.
 const $ = (sel) => document.querySelector(sel);
 const esc = (v) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);

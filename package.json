@@ -1,5 +1,5 @@
 {
-  "name": "rotabuddy",
+  "name": "shift-plus",
   "version": "0.1.0",
   "description": "Simple rotas, proximity clock-in, live pay and AI shift-cover finder for small businesses.",
   "main": "src/server.js",

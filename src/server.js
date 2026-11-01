@@ -9,6 +9,6 @@ const store = createStore(dbFile);
 const port = Number(process.env.PORT ?? 3000);
 
 createApp({ store }).listen(port, () => {
-  console.log(`RotaBuddy running at http://localhost:${port}`);
+  console.log(`Shift+ running at http://localhost:${port}`);
   console.log(process.env.OPENAI_API_KEY ? "AI cover ranking: on" : "AI cover ranking: off (set OPENAI_API_KEY), using rules");
 });

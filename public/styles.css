@@ -1,4 +1,4 @@
-/* RotaBuddy: minimalist styling. Geist type and neutral tokens in the spirit of
+/* Shift+: minimalist styling. Geist type and neutral tokens in the spirit of
    Vercel's Geist design system; Apple-style translucency, segmented controls and sheets. */
 @font-face {
   font-family: "Geist";
@@ -66,7 +66,10 @@ small, .muted { color: var(--muted); }
   width: 22px; height: 22px; border-radius: 7px; background: var(--ink);
   display: grid; place-items: center;
 }
-.logo::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+.logo { position: relative; }
+.logo::before, .logo::after { content: ""; position: absolute; background: #fff; border-radius: 1px; }
+.logo::before { width: 10px; height: 2px; }
+.logo::after { width: 2px; height: 10px; }
 .who { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
 
 select, input {
