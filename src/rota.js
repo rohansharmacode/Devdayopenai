@@ -89,9 +89,13 @@ export function payReport(db, { period = "week", date = new Date(), now = new Da
     const scheduled = db.shifts
       .filter((s) => s.staffId === p.id)
       .reduce((h, s) => h + hoursInRange(s.start, s.end, from, to), 0);
+    const tips = (db.reviews ?? [])
+      .filter((r) => r.staffId === p.id && new Date(r.at) >= from && new Date(r.at) < to)
+      .reduce((t, r) => t + (r.tip ?? 0), 0);
     return {
       staffId: p.id,
       name: p.name,
+      tips: round2(tips),
       hourlyRate: p.hourlyRate,
       workedHours: round2(worked),
       scheduledHours: round2(scheduled),
@@ -105,17 +109,18 @@ export function payReport(db, { period = "week", date = new Date(), now = new Da
       workedHours: round2(t.workedHours + r.workedHours),
       earned: round2(t.earned + r.earned),
       projected: round2(t.projected + r.projected),
+      tips: round2(t.tips + r.tips),
     }),
-    { workedHours: 0, earned: 0, projected: 0 },
+    { workedHours: 0, earned: 0, projected: 0, tips: 0 },
   );
   return { period, from: from.toISOString(), to: to.toISOString(), rows, totals };
 }
 
 export function payCsv(report) {
-  const head = "Name,Hourly rate (GBP),Scheduled hours,Worked hours,Earned (GBP),Projected (GBP)";
+  const head = "Name,Hourly rate (GBP),Scheduled hours,Worked hours,Earned (GBP),Tips (GBP),Projected (GBP)";
   const esc = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v);
   const lines = report.rows.map((r) =>
-    [r.name, r.hourlyRate.toFixed(2), r.scheduledHours, r.workedHours, r.earned.toFixed(2), r.projected.toFixed(2)]
+    [r.name, r.hourlyRate.toFixed(2), r.scheduledHours, r.workedHours, r.earned.toFixed(2), r.tips.toFixed(2), r.projected.toFixed(2)]
       .map(esc)
       .join(","),
   );

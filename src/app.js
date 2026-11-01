@@ -7,6 +7,7 @@ import {
   distanceM, httpError,
 } from "./rota.js";
 import { rankCovers } from "./ai.js";
+import { onClockIn, onClockOut, onCover, onReview, profile, leaderboard } from "./game.js";
 import { overlaps } from "./time.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -18,7 +19,39 @@ export function createApp({ store, now = () => new Date(), env = process.env, fe
   app.use(express.json({ limit: "50kb" }));
   app.use(express.static(path.join(ROOT, "public")));
   app.use("/vendor/fullcalendar", express.static(path.join(ROOT, "node_modules", "fullcalendar")));
-  app.use("/vendor/geist", express.static(path.join(ROOT, "node_modules", "geist", "dist", "fonts")));
+  app.use("/vendor/fredoka", express.static(path.join(ROOT, "node_modules", "@fontsource-variable", "fredoka", "files")));
+  app.use("/vendor/nunito", express.static(path.join(ROOT, "node_modules", "@fontsource-variable", "nunito", "files")));
+
+  // ---- Public: customer review + tip page (no login) ----
+  app.get("/api/public/team", (_req, res) => {
+    const { db } = store;
+    res.json({
+      site: { name: db.site.name },
+      team: db.staff.map((s) => ({ id: s.id, firstName: s.name.split(" ")[0], role: s.role, pet: s.pet })),
+    });
+  });
+
+  app.post("/api/public/reviews", (req, res) => {
+    const b = req.body ?? {};
+    const person = store.staff(b.staffId);
+    if (!person) throw httpError(400, "Pick who served you.");
+    const stars = Number(b.stars);
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) throw httpError(400, "Stars must be 1 to 5.");
+    const tip = Math.round(Math.max(0, Math.min(20, Number(b.tip) || 0)) * 100) / 100;
+    const t = now();
+    const reviews = (store.db.reviews ??= []);
+    const recent = reviews.filter((r) => +t - +new Date(r.at) < 10_000);
+    if (recent.length >= 5) throw httpError(429, "Slow down a little!");
+    const review = {
+      id: store.newId("r"), staffId: person.id, stars, tip,
+      comment: String(b.comment ?? "").slice(0, 200), at: t.toISOString(),
+    };
+    reviews.push(review);
+    const awards = onReview(store, review, t);
+    store.log("review", `${person.name} got ${stars}★${tip ? ` and a £${tip.toFixed(2)} tip` : ""} from a customer.`);
+    store.save();
+    res.status(201).json({ ok: true, xp: awards.reduce((n, a) => n + a.entry.points, 0), pet: person.pet, firstName: person.name.split(" ")[0] });
+  });
 
   // Demo "login": the client sends who it is acting as. Not real auth (see README).
   app.use("/api", (req, _res, next) => {
@@ -54,6 +87,14 @@ export function createApp({ store, now = () => new Date(), env = process.env, fe
       coverAsks: me
         ? db.shifts.filter((s) => s.status === "needs_cover" && s.cover?.asked?.includes(me))
         : [],
+      game: {
+        me: me ? profile(db, me, t) : null,
+        leaderboard: leaderboard(db, t),
+      },
+      reviews: (db.reviews ?? [])
+        .filter((r) => !me || r.staffId === me)
+        .sort((a, b) => new Date(b.at) - new Date(a.at))
+        .slice(0, 8),
     });
   });
 
@@ -88,8 +129,11 @@ export function createApp({ store, now = () => new Date(), env = process.env, fe
   // ---- Clock in/out by proximity ----
   app.post("/api/clock", (req, res) => {
     if (req.user.manager) throw httpError(400, "Switch to a staff member to clock in.");
-    const result = toggleClock(store, req.user.id, req.body, now());
-    res.json(result);
+    const t = now();
+    const result = toggleClock(store, req.user.id, req.body, t);
+    const awards = result.action === "in" ? onClockIn(store, req.user.id, result.entry, t) : onClockOut(store, req.user.id, t);
+    store.save();
+    res.json({ ...result, awards: awards.map(({ entry, levelUp, after }) => ({ ...entry, levelUp, level: after.level })) });
   });
 
   app.post("/api/distance", (req, res) => {
@@ -163,6 +207,7 @@ export function createApp({ store, now = () => new Date(), env = process.env, fe
       shift.cover.coveredAt = now().toISOString();
       shift.staffId = me;
       shift.status = "covered";
+      onCover(store, me, shift, now());
       store.log("cover", `${person.name} is covering ${shift.role} on ${new Date(shift.start).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}.`);
     } else {
       shift.cover.declined.push(me);

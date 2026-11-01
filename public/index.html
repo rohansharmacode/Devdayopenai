@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#fafafa" />
+  <meta name="theme-color" content="#fff7e8" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -12,7 +12,8 @@
   <link rel="icon" href="/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icon-180.png" />
   <title>Shift+</title>
-  <link rel="preload" href="/vendor/geist/geist-sans/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/vendor/fredoka/fredoka-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/vendor/nunito/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/styles.css" />
   <script src="/vendor/fullcalendar/index.global.min.js"></script>
 </head>
@@ -50,6 +51,14 @@
       </section>
       <aside>
         <div class="card">
+          <div class="card-head"><h2>🏆 Team league</h2><small class="muted" style="font-weight:800">last 7 days</small></div>
+          <ul class="league" id="mgrLeague"></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>⭐ Customer love</h2><a class="link" href="/review.html" target="_blank" rel="noopener">Open review page</a></div>
+          <ul class="reviews" id="mgrReviews"></ul>
+        </div>
+        <div class="card">
           <div class="card-head">
             <h2>Pay</h2>
             <div class="seg" data-pay-toggle>
@@ -78,8 +87,17 @@
       <h1 id="greeting"></h1>
       <p id="greetingSub"></p>
     </div>
-    <div class="card clock-card" id="clockCard"></div>
+    <div class="card pet-card" id="petCard"></div>
     <div id="coverAsks"></div>
+    <div class="card clock-card" id="clockCard"></div>
+    <div class="card">
+      <div class="card-head"><h2>🏆 Team league</h2><small class="muted" style="font-weight:800">last 7 days</small></div>
+      <ul class="league" id="league"></ul>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>🎖️ Badges</h2><small class="muted" id="badgeCount" style="font-weight:800"></small></div>
+      <div class="badges" id="badges"></div>
+    </div>
     <div class="card">
       <div class="card-head">
         <h2>Pay</h2>
@@ -89,6 +107,10 @@
         </div>
       </div>
       <div id="myPay"></div>
+    </div>
+    <div class="card">
+      <h2>✨ Recent wins</h2>
+      <ul class="wins" id="wins"></ul>
     </div>
     <div class="card">
       <h2>Upcoming</h2>
@@ -112,6 +134,7 @@
 
   <dialog id="modal"><div id="modalBody"></div></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

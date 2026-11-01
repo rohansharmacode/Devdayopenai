@@ -1,5 +1,14 @@
 // Shift+ front end. Plain JS, no build step.
+import { petSvg, STAGE_LABEL, moodLine } from "./pets.js";
+
 const $ = (sel) => document.querySelector(sel);
+// Only touch the DOM when a section actually changed, so pets keep animating smoothly between polls.
+function setHTML(el, html) {
+  if (!el || el._html === html) return false;
+  el._html = html;
+  el.innerHTML = html;
+  return true;
+}
 const esc = (v) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const gbp = (n) => `£${Number(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -164,6 +173,8 @@ function renderManager() {
   calendar.addEventSource(shiftEvents(state.shifts));
   calendar.addEventSource(timeOffEvents(state.timeOff));
   renderAlerts();
+  renderLeague($("#mgrLeague"));
+  renderMgrReviews();
   renderKpis();
   renderPay();
   renderTimeOff();
@@ -209,12 +220,12 @@ function renderAlerts() {
   });
   const items = [
     ...needs.map(
-      (s) => `<li><div class="txt"><span class="sev cover"></span><span>${esc(first(s.cover.requestedBy))} can't make ${esc(s.role)}
+      (s) => `<li><div class="txt"><span class="sev cover">🆘</span><span>${esc(first(s.cover.requestedBy))} can't make ${esc(s.role)}
         <small>${esc(fmtRange(s))} · asked ${s.cover.asked.map((id) => esc(first(id))).join(", ") || "nobody yet"}</small></span></div>
         <button class="btn small" data-open="${esc(s.id)}">Find cover</button></li>`,
     ),
     ...warnings.map(
-      (w) => `<li><div class="txt"><span class="sev ${esc(w.level)}"></span><span>${esc(w.text)}</span></div></li>`,
+      (w) => `<li><div class="txt"><span class="sev ${esc(w.level)}">${w.level === "danger" ? "⚠️" : "⏳"}</span><span>${esc(w.text)}</span></div></li>`,
     ),
   ];
   $("#attentionCard").hidden = items.length === 0;
@@ -230,14 +241,14 @@ async function renderPay() {
       : `Week of ${fmtDay(report.from)}`;
   if (state.user.manager) {
     $("#payTable").innerHTML = `<p class="meta">${esc(label)}</p>
-      <table><thead><tr><th>Name</th><th class="num">Hours</th><th class="num">Earned</th><th class="num">Projected</th></tr></thead>
+      <table><thead><tr><th>Name</th><th class="num">Hours</th><th class="num">Earned</th><th class="num">Tips</th></tr></thead>
       <tbody>${report.rows
         .map(
           (r) => `<tr><td><span class="dot" style="background:${esc(staffById(r.staffId)?.color)}"></span>${esc(r.name.split(" ")[0])}${r.clockedIn ? '<span class="live">Live</span>' : ""}</td>
-        <td class="num">${r.workedHours.toFixed(1)}</td><td class="num">${gbp(r.earned)}</td><td class="num">${gbp(r.projected)}</td></tr>`,
+        <td class="num">${r.workedHours.toFixed(1)}</td><td class="num">${gbp(r.earned)}</td><td class="num">${gbp(r.tips)}</td></tr>`,
         )
         .join("")}</tbody>
-      <tfoot><tr><td>Total</td><td class="num">${report.totals.workedHours.toFixed(1)}</td><td class="num">${gbp(report.totals.earned)}</td><td class="num">${gbp(report.totals.projected)}</td></tr></tfoot></table>`;
+      <tfoot><tr><td>Total</td><td class="num">${report.totals.workedHours.toFixed(1)}</td><td class="num">${gbp(report.totals.earned)}</td><td class="num">${gbp(report.totals.tips)}</td></tr></tfoot></table>`;
     $("#csvLink").onclick = async () => {
       const res = await fetch(`/api/pay?period=${payPeriod}&format=csv`, { headers: { "x-user": who } });
       const blob = await res.blob();
@@ -249,11 +260,12 @@ async function renderPay() {
     };
   } else {
     const r = report.rows[0];
-    $("#myPay").innerHTML = `<p class="meta">${esc(label)} · ${gbp(r.hourlyRate)} an hour</p>
+    setHTML($("#myPay"), `<p class="meta">${esc(label)} · ${gbp(r.hourlyRate)} an hour</p>
       <div class="pay-big">
         <div><div class="val num">${gbp(r.earned)}</div><small>Earned · ${hrs(r.workedHours)}</small></div>
+        <div><div class="val2 num">+${gbp(r.tips)}</div><small>Tips 🪙</small></div>
         <div><div class="val2 num">${gbp(r.projected)}</div><small>On track for · ${hrs(r.scheduledHours)}</small></div>
-      </div>`;
+      </div>`);
   }
 }
 
@@ -449,7 +461,7 @@ async function openCover(s, header) {
         const declined = s.cover.declined.includes(c.staffId);
         const pos = c.eligible ? ++n : 0;
         return `<li class="${pos === 1 ? "top" : ""} ${c.eligible ? "" : "ineligible"}">
-        <div>${pos ? `<span class="rank">${pos}</span>` : ""}<strong>${esc(c.name)}</strong><span class="meta-line">${esc(c.role)} · ${c.hoursThisWeek}/${c.maxHours}h · ${gbp(c.hourlyRate)}</span>
+        <div>${pos ? `<span class="rank-dot">${pos}</span>` : ""}<strong>${esc(c.name)}</strong><span class="meta-line">${esc(c.role)} · ${c.hoursThisWeek}/${c.maxHours}h · ${gbp(c.hourlyRate)}</span>
           <div class="reason">${esc(c.eligible ? r?.reason ?? "" : `Unavailable: ${c.exclusions.join(", ")}`)}</div></div>
         <div>${
           declined
@@ -492,12 +504,200 @@ function renderWorker() {
   const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
   $("#greeting").textContent = `${part}, ${state.user.name.split(" ")[0]}`;
   $("#greetingSub").textContent = `${state.site.name} · ${now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}`;
+  renderPetCard();
   renderClock();
   renderCoverAsks();
+  renderLeague($("#league"));
+  renderBadges();
+  renderWins();
   renderPay();
   renderMyShifts();
   renderMyCalendar();
   renderMyTimeOff();
+  celebrate();
+}
+
+// ---------- game ----------
+const BADGE_ICON = { sunrise: "🌅", shield: "🛡️", cape: "🦸", star: "🌟", coin: "🪙", flame: "🔥" };
+const KIND_ICON = { on_time: "⏰", showed_up: "👋", shift_done: "✅", cover: "🦸", last_minute: "⚡", review: "⭐", tip: "🪙", streak: "🔥", history: "📦" };
+let lastPct = null;
+
+function renderPetCard() {
+  const g = state.game.me;
+  const pet = g.pet;
+  const pct = Math.round((g.into / g.needed) * 100);
+  const me = state.game.leaderboard.find((r) => r.staffId === who);
+  $("#petCard").style.setProperty("--pc", pet.color);
+  const changed = setHTML(
+    $("#petCard"),
+    `<div class="pet-stage" id="petStage" title="Give ${esc(pet.name)} a poke">${petSvg(pet, g.stage.stage, pet.mood, 160)}</div>
+     <div class="pet-name">${esc(pet.name)}</div>
+     <div class="pet-sub">Level ${g.level} ${esc(STAGE_LABEL[g.stage.stage])} · ${esc(pet.species)}</div>
+     <p class="pet-mood" id="petMood">${esc(moodLine(pet.name, pet.mood))}</p>
+     <div class="xpbar"><div class="fill" style="width:${lastPct ?? pct}%"></div><span>${g.into} / ${g.needed} XP to level ${g.level + 1}</span></div>
+     <div class="chips">
+       <span class="chip-pill">🔥 ${g.streak} on-time streak</span>
+       <span class="chip-pill">🏆 #${me?.rank ?? "–"} this week</span>
+       <span class="chip-pill">⚡ ${g.weekXp} XP this week</span>
+     </div>`,
+  );
+  if (changed) {
+    const fill = $("#petCard .fill");
+    requestAnimationFrame(() => requestAnimationFrame(() => (fill.style.width = `${pct}%`)));
+    lastPct = pct;
+    $("#petStage").onclick = () => {
+      const svg = $("#petStage svg");
+      svg.classList.remove("poke");
+      void svg.getBoundingClientRect();
+      svg.classList.add("poke");
+      const lines = [`${pet.name} giggles!`, `${pet.name} loves you!`, `Boop! ${pet.name} wiggles.`, `${pet.name} wants more XP!`];
+      $("#petMood").textContent = lines[Math.floor(Math.random() * lines.length)];
+    };
+  }
+}
+
+function renderLeague(el) {
+  if (!el) return;
+  const medals = ["🥇", "🥈", "🥉"];
+  setHTML(
+    el,
+    state.game.leaderboard
+      .map(
+        (r) => `<li class="${r.staffId === who ? "me" : ""}" style="--pc:${esc(r.pet.color)}">
+        <span class="rank">${medals[r.rank - 1] ?? r.rank}</span>
+        <span class="avatar">${petSvg(r.pet, r.stage.stage, r.pet.mood, 44)}</span>
+        <span class="lw"><b>${esc(r.name.split(" ")[0])}${r.staffId === who ? " (you)" : ""}</b><small>${esc(r.pet.name)} · Lv ${r.level} ${esc(STAGE_LABEL[r.stage.stage])}${r.streak >= 3 ? ` · 🔥${r.streak}` : ""}</small></span>
+        <span class="pts">${r.weekXp}<small>XP</small></span>
+      </li>`,
+      )
+      .join(""),
+  );
+}
+
+function renderBadges() {
+  const b = state.game.me.badges;
+  $("#badgeCount").textContent = `${b.filter((x) => x.earned).length} of ${b.length}`;
+  setHTML(
+    $("#badges"),
+    b
+      .map(
+        (x) => `<div class="bdg ${x.earned ? "earned" : "locked"}" title="${esc(x.desc)}"><span class="ico">${BADGE_ICON[x.icon] ?? "🏅"}</span><b>${esc(x.name)}</b><small>${esc(x.desc)}</small></div>`,
+      )
+      .join(""),
+  );
+}
+
+function renderWins() {
+  setHTML(
+    $("#wins"),
+    state.game.me.recent
+      .filter((e) => e.kind !== "history")
+      .slice(0, 6)
+      .map(
+        (e) => `<li><span>${KIND_ICON[e.kind] ?? "✨"} ${esc(e.note)}<small class="muted" style="display:block;font-size:12px">${esc(fmtDay(e.at))} · ${esc(fmtTime(e.at))}</small></span><span class="badge xp">+${e.points} XP</span></li>`,
+      )
+      .join("") || `<li class="muted">Clock in on time to earn your first XP!</li>`,
+  );
+}
+
+function renderMgrReviews() {
+  setHTML(
+    $("#mgrReviews"),
+    state.reviews
+      .slice(0, 5)
+      .map(
+        (r) => `<li><span class="stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span> for <b>${esc(first(r.staffId))}</b>${r.tip ? ` · <span class="badge xp">£${r.tip.toFixed(2)} tip</span>` : ""}
+        ${r.comment ? `<small class="muted" style="display:block">“${esc(r.comment)}”</small>` : ""}</li>`,
+      )
+      .join("") || `<li class="muted">No reviews yet. Share the review page at the till!</li>`,
+  );
+}
+
+// ----- celebrations -----
+let seenXp = null;
+let seenLevel = null;
+
+function celebrate() {
+  const g = state.game.me;
+  const ids = g.recent.map((e) => e.id);
+  if (seenXp === null) {
+    seenXp = new Set(ids);
+    seenLevel = g.level;
+    return;
+  }
+  const fresh = g.recent.filter((e) => !seenXp.has(e.id)).reverse();
+  fresh.forEach((e, i) => setTimeout(() => xpPop(e.points, e.note), i * 900));
+  ids.forEach((id) => seenXp.add(id));
+  if (fresh.length) confetti(fresh.some((e) => e.points >= 30) ? 160 : 70);
+  if (g.level > seenLevel) {
+    const grew = g.stage.stage;
+    setTimeout(() => levelUpSheet(g, grew), fresh.length * 900 + 300);
+  }
+  seenLevel = g.level;
+}
+
+function xpPop(points, label) {
+  const el = document.createElement("div");
+  el.className = "xp-pop";
+  el.innerHTML = `+${points} XP<small>${esc(label)}</small>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+function levelUpSheet(g, stage) {
+  confetti(260);
+  modal(`<div class="levelup">
+    <div class="pet-stage">${petSvg(g.pet, stage, "ecstatic", 190)}</div>
+    <h3>Level ${g.level}!</h3>
+    <p class="muted" style="font-weight:800;margin:6px 0 0">${esc(g.pet.name)} is now a ${esc(STAGE_LABEL[stage])}. Keep it up!</p>
+    <div class="modal-actions" style="justify-content:center"><button class="btn sun big" data-close>Yay! 🎉</button></div>
+  </div>`);
+}
+
+function confetti(count = 120) {
+  const canvas = $("#confetti");
+  if (!canvas || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const ctx = canvas.getContext("2d");
+  const dpr = devicePixelRatio || 1;
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const colors = ["#ff5fa2", "#8b5cf6", "#ffc83d", "#2ed8a3", "#38bdf8", "#ff6b6b"];
+  const parts = Array.from({ length: count }, () => ({
+    x: innerWidth / 2 + (Math.random() - 0.5) * 120,
+    y: innerHeight * 0.45,
+    vx: (Math.random() - 0.5) * 16,
+    vy: -Math.random() * 16 - 6,
+    r: Math.random() * 6 + 4,
+    rot: Math.random() * Math.PI,
+    vr: (Math.random() - 0.5) * 0.4,
+    c: colors[Math.floor(Math.random() * colors.length)],
+    shape: Math.random() > 0.5 ? "rect" : "circle",
+  }));
+  const start = performance.now();
+  (function frame(t) {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of parts) {
+      p.vy += 0.45;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.c;
+      if (p.shape === "rect") ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2);
+      else {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.r / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    if (t - start < 2600) requestAnimationFrame(frame);
+    else ctx.clearRect(0, 0, innerWidth, innerHeight);
+  })(start);
 }
 
 const SIMULATED = {
@@ -530,22 +730,22 @@ function renderClock() {
     const sh = state.shifts.find((x) => x.id === open.shiftId);
     const elapsed = (Date.now() - new Date(open.in)) / 36e5;
     const len = sh ? (new Date(sh.end) - new Date(sh.start)) / 36e5 : 8;
-    ringHtml = ring(elapsed / len, "var(--green)", `<div class="val num">${gbp(elapsed * rate)}</div><small>this shift</small>`);
+    ringHtml = ring(elapsed / len, "var(--mint)", `<div class="val num">${gbp(elapsed * rate)}</div><small>this shift</small>`);
     status = `<strong>Clocked in</strong> since ${fmtTime(open.in)}${sh ? ` · ends ${fmtTime(sh.end)}` : ""}`;
   } else if (d) {
     const dist = d.distanceM < 1000 ? `${d.distanceM}m` : `${(d.distanceM / 1000).toFixed(1)}km`;
     const closeness = d.onSite ? 1 : Math.max(0.04, 1 - Math.log10(d.distanceM / state.site.radiusM) / 2);
-    ringHtml = ring(closeness, d.onSite ? "var(--blue)" : "var(--amber)", `<div class="val num">${dist}</div><small>from work</small>`);
+    ringHtml = ring(closeness, d.onSite ? "var(--sky)" : "var(--sun)", `<div class="val num">${dist}</div><small>from work</small>`);
     status = shift ? `Next: <strong>${esc(shift.role)}</strong> at ${fmtTime(shift.start)}` : "No shift right now";
   } else {
-    ringHtml = ring(0, "var(--faint)", `<div class="val" style="font-size:20px">Location off</div><small>choose below</small>`);
+    ringHtml = ring(0, "var(--line)", `<div class="val" style="font-size:20px">Location off</div><small>choose below</small>`);
     status = shift ? `Next: <strong>${esc(shift.role)}</strong> at ${fmtTime(shift.start)}` : "No shift right now";
   }
   const canClockIn = !open && shift && d?.onSite;
-  $("#clockCard").innerHTML = `
+  setHTML($("#clockCard"), `
     ${ringHtml}
     <p class="status">${status}</p>
-    <button class="btn big ${open ? "" : "go"}" id="clockBtn" ${!open && !canClockIn ? "disabled" : ""}>${open ? "Clock out" : "Clock in"}</button>
+    <button class="btn big ${open ? "" : "go"}" id="clockBtn" ${!open && !canClockIn ? "disabled" : ""}>${open ? `Clock out <span class="xp-tag">+10 XP</span>` : `Clock in <span class="xp-tag">+20 XP on time</span>`}</button>
     <span class="loc-label">Location</span>
     <div class="seg full" role="group" aria-label="Location">
       <button data-loc="gps" class="${mode === "gps" ? "on" : ""}">My GPS</button>
@@ -555,7 +755,7 @@ function renderClock() {
     <div class="toggle-row">
       <span>Auto clock-in<small class="muted">When you're within ${state.site.radiusM}m of ${esc(state.site.name)}</small></span>
       <label class="switch"><input type="checkbox" id="autoClock" ${autoClock ? "checked" : ""}/><span></span></label>
-    </div>`;
+    </div>`);
   $("#clockBtn").onclick = () => doClock(false);
   $("#autoClock").onchange = (e) => {
     autoClock = e.target.checked;
@@ -594,7 +794,7 @@ async function doClock(auto) {
   if (!position) return toast("Turn on location first.", true);
   try {
     const r = await api("/api/clock", { method: "POST", body: { lat: position.lat, lng: position.lng } });
-    toast(r.action === "in" ? `${auto ? "Clocked in automatically" : "Clocked in"} · ${r.distanceM}m from work` : "Clocked out. Nice work.");
+    toast(r.action === "in" ? `${auto ? "Clocked in automatically" : "Clocked in"} · ${r.distanceM}m from work` : "Clocked out. Great shift!");
     await load();
   } catch (e) {
     toast(e.message, true);
@@ -603,20 +803,21 @@ async function doClock(auto) {
 }
 
 function renderCoverAsks() {
-  $("#coverAsks").innerHTML = state.coverAsks
+  const askHtml = state.coverAsks
     .map(
-      (s) => `<div class="card ask-card"><h2>Can you cover?</h2>
+      (s) => `<div class="card ask-card"><h2>🦸 Be a hero!</h2>
       <p style="margin:6px 0 0;font-size:15px"><strong>${esc(s.role)}</strong></p>
       <p class="muted" style="margin:2px 0 0;font-size:14px">${esc(fmtRange(s))} · for ${esc(first(s.cover.requestedBy))}</p>
       <div class="why">${esc(s.cover.ranking.find((r) => r.staffId === who)?.reason ?? "")}</div>
       <div class="ask-actions"><button class="btn ghost" data-decline="${esc(s.id)}">Not this time</button>
-      <button class="btn" data-accept="${esc(s.id)}">I'll cover it</button></div></div>`,
+      <button class="btn go" data-accept="${esc(s.id)}">I'll cover it <span class="xp-tag">+${new Date(s.start) - Date.now() < 864e5 ? 75 : 50} XP</span></button></div></div>`,
     )
     .join("");
+  if (!setHTML($("#coverAsks"), askHtml)) return;
   const respond = (id, accept) => async () => {
     try {
       await api(`/api/shifts/${id}/cover/respond`, { method: "POST", body: { accept } });
-      toast(accept ? "Thanks! It's in your rota." : "No problem, we'll ask someone else.");
+      if (!accept) toast("No problem, we'll ask someone else.");
       await load();
     } catch (e) {
       toast(e.message, true);
@@ -677,7 +878,7 @@ function renderMyShifts() {
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><h2>Best matches</h2>${aiBadge(r.cover.source)}</div>
               <ul class="cands">${r.cover.ranking
                 .slice(0, 3)
-                .map((x, i) => `<li class="${i === 0 ? "top" : ""}"><div><span class="rank">${i + 1}</span><strong>${esc(nameOf(x.staffId))}</strong><div class="reason">${esc(x.reason)}</div></div></li>`)
+                .map((x, i) => `<li class="${i === 0 ? "top" : ""}"><div><span class="rank-dot">${i + 1}</span><strong>${esc(nameOf(x.staffId))}</strong><div class="reason">${esc(x.reason)}</div></div></li>`)
                 .join("")}</ul>
               <div class="modal-actions"><button class="btn" data-close>Done</button></div>`);
             await load();

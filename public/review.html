@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff7e8" />
+  <title>Rate your visit · Shift+</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="review-page">
+    <div style="display:flex;justify-content:center;margin-bottom:12px"><span class="logo" aria-hidden="true"></span></div>
+    <h1 id="title">How was your visit?</h1>
+    <p class="lead" id="lead">Your stars and tips help the team (and their pets) level up.</p>
+    <form id="reviewForm">
+      <div class="card">
+        <h2 style="margin-bottom:12px">Who looked after you?</h2>
+        <div class="team-grid" id="team"></div>
+      </div>
+      <div class="card" style="text-align:center">
+        <h2>How many stars?</h2>
+        <div class="star-row" id="stars"></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:12px">Leave a tip?</h2>
+        <div class="tip-row" id="tips"></div>
+        <input name="comment" maxlength="200" placeholder="Say something nice (optional)" style="width:100%;margin-top:14px" />
+      </div>
+      <button class="btn big go" id="send" disabled>Send some love</button>
+      <p class="fine">Demo app: no payment is taken and no personal details are collected.</p>
+    </form>
+    <div id="thanks" hidden></div>
+  </main>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <script type="module" src="/review.js"></script>
+</body>
+</html>

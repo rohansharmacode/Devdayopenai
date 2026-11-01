@@ -1,10 +1,10 @@
 # Shift+
 
-**Simple rotas, proximity clock-in, live pay and an AI shift-cover finder for small businesses.**
+**The rota app your team actually wants to open.** Simple rotas, proximity clock-in, live pay and an AI shift-cover finder for small businesses, wrapped in a game: every on-time arrival, covered shift, 5-star review and tip earns XP that hatches and grows your own pet, and the team competes in a weekly league.
 
 Built in one day at the DevDay Exchange Community Hackathon, London, 1 November 2026.
 
-Small cafés, shops and salons run their rotas on WhatsApp groups and spreadsheets. When someone can't make a shift, the owner spends the morning texting people who are already working, on holiday or about to go over their hours. Shift+ keeps the rota, clocks people in when they actually arrive, adds up pay as they go, and when a shift is dropped it works out who can really cover it and asks them.
+Small cafés, shops and salons run their rotas on WhatsApp groups and spreadsheets. When someone can't make a shift, the owner spends the morning texting people who are already working, on holiday or about to go over their hours. Shift+ keeps the rota, clocks people in when they actually arrive, adds up pay as they go, and when a shift is dropped it works out who can really cover it and asks them. The game layer rewards exactly the behaviour a small business needs: turning up on time, covering colleagues and delighting customers.
 
 ![Manager view: weekly rota, alerts and live pay](docs/manager.png)
 
@@ -14,11 +14,32 @@ Small cafés, shops and salons run their rotas on WhatsApp groups and spreadshee
 2. **A worker arrives at work.** The phone view sees they're within 100 m of the site and clocks them in automatically. If they're further away, clock-in is refused and the app says how far they are.
 3. **Pay adds up live:** this shift, this week and this month, with what they'll earn if they work their rota.
 4. **The worker taps "Can't make it"** on a future shift. Shift+ finds everyone who could cover it: no clashing shift, not on time off, wouldn't break 48 hours. It ranks them with AI on skills, usual availability and hours left, writes a reason for each, and asks the top three.
-5. **A colleague taps "Yes, I'll cover".** The calendar, both people's rotas and the pay projections update for everyone.
+5. **A colleague taps "I'll cover it".** They earn +50 XP as a "Shift Hero" (+25 more if it's last-minute), their pet levels up with confetti, and they climb the team league. The calendar, both people's rotas and the pay projections update for everyone.
 
-| Worker: proximity clock-in | Worker: cover request | Manager: AI-ranked cover |
+### The game
+
+| Action | XP |
+|---|---|
+| Clock in on time (within 5 min, and on site) | +20 |
+| Finish a shift | +10 |
+| Cover a colleague's shift | +50, or +75 if within 24h |
+| 5-star / 4-star customer review | +30 / +15 |
+| Customer tip | +2 per £1 |
+| Every 5 on-time arrivals in a row | +25 streak bonus |
+
+- **Pets.** Everyone has an original pet: a bunny, fox, cat, dino, axolotl or frog. It starts as an **Egg**, then becomes a **Hatchling** at level 2, a **Buddy** at level 4 and a **Legend** at level 7, gaining a scarf and then a crown. Its mood follows your recent activity. It bounces with joy after you earn XP and naps if you've been away. Tap it for a boop.
+- **Team league.** A rolling 7-day XP table with medals, so new starters can win any week.
+- **Badges.** Early Bird, Shift Hero, Super Hero, Crowd Favourite, Tip Magnet and On Fire.
+- **Customer review page** (`/review.html`). Customers tap who served them, give stars and an optional tip, and see that person's pet do a happy dance. In a café this would be a QR code at the till. It's a demo, so no money moves.
+- **No penalties.** Being late just earns less XP. The game rewards good behaviour rather than punishing people.
+
+| On-time clock-in: +20 XP | Be a hero: cover request | Level up! |
 |---|---|---|
-| ![](docs/worker-clock.png) | ![](docs/worker-ask.png) | ![](docs/cover.png) |
+| ![](docs/worker-clock.png) | ![](docs/worker-ask.png) | ![](docs/levelup.png) |
+
+| Manager: AI-ranked cover | Customer review and tip page |
+|---|---|
+| ![](docs/cover.png) | ![](docs/review.png) |
 
 ### Also included
 
@@ -65,7 +86,7 @@ npm start                # http://localhost:3000
 npm test
 ```
 
-There are 18 tests covering distance, clock-in rules, pay maths, CSV, 48-hour warnings, cover eligibility, permissions, the full drop-rank-accept journey (with a fake OpenAI endpoint), time off opening cover requests, and the AI fallback paths.
+There are 23 tests covering XP rules, levels and pet stages, the leaderboard, the public review endpoint (validation, tip caps, no private fields exposed), distance, clock-in rules, pay maths, CSV, 48-hour warnings, cover eligibility, permissions, the full drop-rank-accept journey (with a fake OpenAI endpoint), time off opening cover requests, and the AI fallback paths.
 
 ## How the AI is used
 
@@ -99,7 +120,10 @@ src/seed.js    fictional café, 6 staff, 2 weeks of shifts generated around toda
 src/rota.js    clock-in, pay, hour warnings, cover candidates (pure functions)
 src/ai.js      OpenAI Responses API ranking with rule fallback
 src/app.js     Express API
-public/        plain HTML/CSS/JS front end (FullCalendar, Geist font)
+src/game.js    XP ledger, levels, pet stages and moods, streaks, badges, leaderboard
+public/        plain HTML/CSS/JS front end (FullCalendar, Fredoka + Nunito fonts)
+public/pets.js original SVG pets, drawn in code
+public/review.html, review.js  customer review and tip page
 test/          node:test suites
 ```
 
@@ -107,6 +131,8 @@ test/          node:test suites
 
 - Real accounts, plus SMS or WhatsApp notifications for cover asks.
 - A shift-swap marketplace between staff.
+- A rewards shop: spend XP on pet accessories, or on perks like first pick of next week's shifts.
+- Team quests, such as "no late arrivals all week", that level up everyone's pets together.
 - AI-drafted next-week rota from demand and last week's patterns.
 - Holiday accrual, and a minimum-wage check against current UK rates.
 - A Postgres store for more than one site.
@@ -115,7 +141,8 @@ test/          node:test suites
 
 - [Express](https://expressjs.com/) (MIT) for the HTTP server.
 - [FullCalendar](https://fullcalendar.io/) 6 (MIT) for the calendar views, served from `node_modules`.
-- [Geist](https://vercel.com/font) and Geist Mono by Vercel (SIL Open Font License) for type. The visual style follows Vercel's Geist design system (neutral greys, black primary buttons), with Apple-style touches: a translucent header, segmented controls, sheets, switches and a progress ring. It was written from scratch in plain CSS; no template code was copied.
+- [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito) (SIL Open Font License), served from the `@fontsource-variable` packages.
+- The pets, icons, confetti and all CSS were written from scratch for this project. Badge icons are system emoji.
 - The OpenAI Responses API powers cover ranking.
 - Built with Claude Code (Anthropic) and OpenAI Codex during the hackathon. No templates or pre-existing project code were used.
 - The idea was inspired by enterprise workforce tools such as Rotageek, simplified for very small teams. Shift+ has no affiliation with them and uses none of their code or assets.
