@@ -4,14 +4,27 @@ The app was built in Claude Code. These steps give Codex a real, visible job at 
 
 ## 0. Set up (5 min)
 
+**Windows (PowerShell).** Use `npm.cmd` and `codex.cmd`, because PowerShell often blocks the plain `npm` and `codex` scripts.
+
+```powershell
+cd $HOME\Devdayopenai
+npm.cmd install -g @openai/codex
+git config --global user.name "rohansharmacode"
+git config --global user.email "74927848+rohansharmacode@users.noreply.github.com"
+npm.cmd test                                           # expect 18 passing
+codex.cmd                                              # choose "Sign in with ChatGPT"
+```
+
+**macOS or Linux:**
+
 ```bash
-curl -fsSL https://chatgpt.com/codex/install.sh | sh   # or follow https://learn.chatgpt.com/codex/cli
+curl -fsSL https://chatgpt.com/codex/install.sh | sh   # or: npm install -g @openai/codex
 git clone https://github.com/rohansharmacode/Devdayopenai.git && cd Devdayopenai
-npm install && npm test                # expect 18 passing
+npm install && npm test                                # expect 18 passing
 codex                                                  # choose "Sign in with ChatGPT"
 ```
 
-Codex reads `AGENTS.md` in the repo root for project rules.
+Codex reads `AGENTS.md` in the repo root for project rules. When you `git push` for the first time, a browser window opens so you can sign in to GitHub.
 
 ## 1. Code review (10 min)
 
@@ -25,13 +38,13 @@ Screenshot the findings, because that screenshot is your evidence.
 
 > Fix the top 3 findings from your review. Add or update a test for each one in test/. Run npm test and make sure everything passes. Keep changes small.
 
-Then commit with `git commit -am "Codex: fix review findings"`.
+Then commit and push with `git commit -am "Codex: fix review findings"` and then `git push`.
 
 ## 3. Let Codex add one small feature (10 to 15 min)
 
 > Add an "Add to my calendar" feature: a GET /api/staff/:id/shifts.ics endpoint that returns that person's upcoming shifts as a valid iCalendar feed (VCALENDAR/VEVENT, UTC times, stable UIDs, CRLF line endings). Workers can only fetch their own feed, and the manager can fetch anyone's. Add a "Add to my calendar" link in the worker view's "My rota" card that downloads it. Add tests for the ICS output and the permissions. Run npm test.
 
-Commit with `git commit -am "Codex: add iCalendar feed for worker shifts"`.
+Commit and push with `git add -A`, `git commit -m "Codex: add iCalendar feed for worker shifts"` and then `git push`.
 
 ## 4. Record the example (5 min)
 
