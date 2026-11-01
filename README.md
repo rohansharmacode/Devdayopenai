@@ -26,7 +26,7 @@ Small cafés, shops and salons run their rotas on WhatsApp groups and spreadshee
 - **Hours warnings.** The app flags anyone rota'd over the 48-hour UK Working Time limit, or over the hours they said they want.
 - **Week/month pay table and CSV export** for the accountant.
 - **Late clock-ins** are logged with minutes late.
-- **Two-window demo mode.** Pick who you are from the "Acting as" menu, and the views stay in sync every 4 seconds.
+- **Two-window demo mode.** Pick who you are from the "Viewing as" menu, and the views stay in sync every 4 seconds.
 
 ## Run it
 
@@ -40,7 +40,7 @@ cp .env.example .env     # optional: add OPENAI_API_KEY for AI ranking
 npm start                # http://localhost:3000
 ```
 
-- Open two windows: one as **Sam (manager)**, one as **Tom Okafor**, for example on a phone-sized window.
+- Open two windows: http://localhost:3000/?as=manager and http://localhost:3000/?as=s2 (Tom). Staff ids are s1 to s6, or use the "Viewing as" menu.
 - In Tom's window, tap **Simulate: at home**, then **Simulate: at work**. He clocks in automatically. **Use my GPS** uses your real location; the site is a fixed demo point in Shoreditch.
 - Tap **Can't make it** on Tom's Monday shift, then switch a window to **Leo Martins** and accept.
 - `npm run reset` (or **Reset demo data** in the manager view) re-seeds the data for the current week.
@@ -84,7 +84,7 @@ _To be filled in with the Codex review findings, the fix commit and the feature 
 - **Location.** The browser's coordinates are sent once per check, used to work out the distance, and thrown away. Only the distance in metres is stored.
 - **Demo data.** All people and the café are fictional. No real personal data is in the repo.
 - **Secrets.** Keys live in `.env`, which is git-ignored.
-- **Not production auth.** The "Acting as" menu is a demo switch. A real deployment needs proper accounts, with workers only able to act as themselves.
+- **Not production auth.** The "Viewing as" menu is a demo switch. A real deployment needs proper accounts, with workers only able to act as themselves.
 
 ## Project layout
 

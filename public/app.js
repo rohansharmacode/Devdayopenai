@@ -9,7 +9,8 @@ const fmtDay = (iso) => new Date(iso).toLocaleDateString("en-GB", { weekday: "sh
 const fmtRange = (s) => `${fmtDay(s.start)} · ${fmtTime(s.start)}–${fmtTime(s.end)}`;
 const hrs = (n) => `${Number(n).toFixed(1).replace(/\.0$/, "")}h`;
 
-let who = localStorage.getItem("who") ?? "manager";
+// Who you are comes from the link (?as=s2) so two windows can be two people; falls back to the last choice.
+let who = new URLSearchParams(location.search).get("as") ?? localStorage.getItem("who") ?? "manager";
 let state = null;
 let payPeriod = "week";
 let calendar = null;
@@ -61,9 +62,10 @@ function renderWho() {
       `<option value="manager">Sam · Manager</option>` +
       state.staff.map((s) => `<option value="${esc(s.id)}">${esc(s.name)} · ${esc(s.role)}</option>`).join("");
     sel.addEventListener("change", () => {
-      who = sel.value;
-      localStorage.setItem("who", who);
-      location.reload();
+      localStorage.setItem("who", sel.value);
+      const url = new URL(location.href);
+      url.searchParams.set("as", sel.value);
+      location.href = url.toString();
     });
   }
   sel.value = who;

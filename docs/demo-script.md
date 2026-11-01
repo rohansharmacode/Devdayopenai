@@ -1,6 +1,6 @@
 # Demo video script (target 75 seconds, hard limit 90)
 
-**Setup.** Run `npm run reset`, then `npm start`. Put the manager window on the left and a phone-sized window as Tom on the right. Set Tom's location to "Simulate: at home" before recording. Record at 1080p with no notifications showing.
+**Setup.** Run `npm run reset`, then `npm start`. Open http://localhost:3000/?as=manager on the left and a phone-sized window at http://localhost:3000/?as=s2 (Tom) on the right. Set Tom's location to "Simulate: at home" before recording. Record at 1080p with no notifications showing.
 
 | Time | On screen | Say |
 |---|---|---|
