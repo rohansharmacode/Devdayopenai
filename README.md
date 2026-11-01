@@ -33,8 +33,8 @@ Small cafés, shops and salons run their rotas on WhatsApp groups and spreadshee
 You need Node.js 22.9 or later.
 
 ```bash
-git clone <this repo>
-cd rotabuddy
+git clone https://github.com/rohansharmacode/Devdayopenai.git
+cd Devdayopenai
 npm install
 cp .env.example .env     # optional: add OPENAI_API_KEY for AI ranking
 npm start                # http://localhost:3000

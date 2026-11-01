@@ -6,7 +6,8 @@ The app was built in Claude Code. These steps give Codex a real, visible job at 
 
 ```bash
 curl -fsSL https://chatgpt.com/codex/install.sh | sh   # or follow https://learn.chatgpt.com/codex/cli
-cd rotabuddy && npm install && npm test                # expect 18 passing
+git clone https://github.com/rohansharmacode/Devdayopenai.git && cd Devdayopenai
+npm install && npm test                # expect 18 passing
 codex                                                  # choose "Sign in with ChatGPT"
 ```
 
