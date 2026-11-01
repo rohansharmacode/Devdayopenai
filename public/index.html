@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RotaBuddy</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script src="/vendor/fullcalendar/index.global.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">R</span>
+      <div>
+        <strong>RotaBuddy</strong>
+        <small id="siteName">Loading…</small>
+      </div>
+    </div>
+    <label class="who">
+      <span>Acting as</span>
+      <select id="whoSelect" aria-label="Acting as"></select>
+    </label>
+  </header>
+
+  <main id="managerView" class="layout" hidden>
+    <section class="main-col">
+      <div id="alerts"></div>
+      <div class="card cal-card"><div id="calendar"></div></div>
+      <p class="hint">Drag across empty time to add a shift. Click a shift to edit it or find cover.</p>
+    </section>
+    <aside class="side-col">
+      <div class="card">
+        <div class="card-head">
+          <h2>Pay</h2>
+          <div class="seg" data-pay-toggle>
+            <button data-period="week" class="on">Week</button>
+            <button data-period="month">Month</button>
+          </div>
+        </div>
+        <div id="payTable"></div>
+        <a id="csvLink" class="btn ghost small" href="#">Export CSV</a>
+      </div>
+      <div class="card">
+        <h2>Time off requests</h2>
+        <div id="timeOffList"></div>
+      </div>
+      <div class="card">
+        <h2>Activity</h2>
+        <ul id="activity" class="activity"></ul>
+        <button id="resetBtn" class="btn ghost small">Reset demo data</button>
+      </div>
+    </aside>
+  </main>
+
+  <main id="workerView" class="worker" hidden>
+    <div class="card clock-card" id="clockCard"></div>
+    <div id="coverAsks"></div>
+    <div class="card">
+      <div class="card-head">
+        <h2>My pay</h2>
+        <div class="seg" data-pay-toggle>
+          <button data-period="week" class="on">Week</button>
+          <button data-period="month">Month</button>
+        </div>
+      </div>
+      <div id="myPay"></div>
+    </div>
+    <div class="card">
+      <h2>My upcoming shifts</h2>
+      <ul id="myShifts" class="shift-list"></ul>
+    </div>
+    <div class="card">
+      <h2>My rota</h2>
+      <div id="myCalendar"></div>
+    </div>
+    <div class="card">
+      <h2>Request time off</h2>
+      <form id="timeOffForm" class="form-grid">
+        <label>From <input type="date" name="start" required /></label>
+        <label>To <input type="date" name="end" required /></label>
+        <label class="wide">Reason (optional) <input name="reason" maxlength="200" /></label>
+        <button class="btn">Send request</button>
+      </form>
+      <ul id="myTimeOff" class="plain"></ul>
+    </div>
+  </main>
+
+  <dialog id="modal"><div id="modalBody"></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
